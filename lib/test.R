@@ -2,11 +2,12 @@
 ### Fit the classification model with testing data ###
 ######################################################
 
-### Author: Yuting Ma
+### Author: Group 10
 ### Project 3
-### ADS Spring 2016
+### ADS Spring 2018
 
-test <- function(fit_train, dat_test){
+test <- function(fit_train, dat_test, params = NULL,
+                 test.gbm = F){
   
   ### Fit the classfication model with testing data
   
@@ -18,9 +19,13 @@ test <- function(fit_train, dat_test){
   ### load libraries
   library("gbm")
   
-  pred <- predict(fit_train$fit, newdata=dat_test, 
-                  n.trees=fit_train$iter, type="response")
+  if( test.gbm ){
+    prob.pred <- predict(fit_train$fit, 
+                         newdata=dat_test, 
+                         type="response")
+    pred<- apply(prob.pred, 1, which.max) 
+    pred<- pred-1
+  } 
   
-  return(as.numeric(pred> 0.5))
 }
 

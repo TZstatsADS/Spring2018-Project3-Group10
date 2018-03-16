@@ -2,12 +2,13 @@
 ### Train a classification model with training images ###
 #########################################################
 
-### Author: Yuting Ma
+### Author: Group 10
 ### Project 3
-### ADS Spring 2016
+### ADS Spring 2018
 
 
-train <- function(dat_train, label_train, par=NULL){
+train <- function(dat_train, label_train, params=NULL,
+                  run.gbm = F){
   
   ### Train a Gradient Boosting Model (GBM) using processed features from training images
   
@@ -16,22 +17,22 @@ train <- function(dat_train, label_train, par=NULL){
   ###  -  class labels for training images
   ### Output: training model specification
   
-  ### load libraries
-  library("gbm")
-  
-  ### Train with gradient boosting model
-  if(is.null(par)){
-    depth <- 3
-  } else {
-    depth <- par$depth
+  ## GBM model
+  gbm <- NULL
+  if (run.gbm){
+    if(!require("gbm")){
+      install.packages("gbm")
+    }
+    library("gbm")
+    gbm.fit <- gbm.fit(x = dat_train, 
+                       y = label_train[,3],
+                       n.trees = 400,
+                       distribution = "multinomial",
+                       interaction.depth = params,
+                       shrinkage = 0.2,
+                       n.minobsinnode = 30,
+                       verbose = F)
+    return(gbm.fit)
   }
-  fit_gbm <- gbm.fit(x=dat_train, y=label_train,
-                     n.trees=2000,
-                     distribution="bernoulli",
-                     interaction.depth=depth, 
-                     bag.fraction = 0.5,
-                     verbose=FALSE)
-  best_iter <- gbm.perf(fit_gbm, method="OOB", plot.it = FALSE)
-
-  return(list(fit=fit_gbm, iter=best_iter))
+  
 }

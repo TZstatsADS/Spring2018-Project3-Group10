@@ -1,0 +1,76 @@
+---
+title: "Train_baseline_model"
+author: "Wenshan Wang"
+date: "3/15/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("EBImage")
+library("gbm")
+```
+
+Set up GBM with different `depth`. 
+```{r model_setup}
+model_values <- seq(3, 11, 2)
+model_labels = paste("GBM with depth =", model_values)
+```
+
+```{r}
+# combine label and sift feature
+df <- read.csv('../data/sift_train.csv',header = F)
+df <- df[,-1]
+label <- read.csv('../data/label_train.csv', header = T)
+label <- label$label
+df_combined <- cbind(label, df)
+head(df_combined)
+df_combined$label <- as.factor(df_combined$label)
+head(df_combined)
+```
+
+```{r}
+# set up GBM training function
+train_gbm <- function(df){
+  ## df has both label and feature columns
+  
+  library("gbm")
+  start_time <- Sys.time()
+  
+  gbm.fit <- gbm(label~., 
+                 data = df,
+                 n.trees = 400,
+                 distribution = "multinomial",
+                 interaction.depth = 3,
+                 shrinkage = 0.2,
+                 n.minobsinnode = 30,
+                 verbose = F)
+
+  end_time <- Sys.time()
+  gbm_running_time <- end_time - start_time
+  
+  return(list(fit = gbm.fit, time = gbm_running_time))
+}
+```
+
+
+```{r}
+
+baseline.result = train_gbm(df_combined)
+
+
+# load("../output/baseline.result.Rdata")
+baseline.time <- baseline.result[[2]]
+baseline.time
+```
+
+```{r}
+baseline.accuracy = 1-baseline.result[[3]]
+print(paste0("The accuracy rate of baseline model is ", baseline.accuracy))
+```
+
+
+
