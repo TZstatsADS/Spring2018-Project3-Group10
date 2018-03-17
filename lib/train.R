@@ -7,7 +7,7 @@
 ### ADS Spring 2018
 
 
-train <- function(dat_train, label_train, params=NULL,
+train.gbm <- function(dat_train, label_train, params=NULL,
                   run.gbm = F){
   
   ### Train a Gradient Boosting Model (GBM) using processed features from training images
@@ -25,14 +25,16 @@ train <- function(dat_train, label_train, params=NULL,
     }
     library("gbm")
     gbm.fit <- gbm.fit(x = dat_train, 
-                       y = label_train[,3],
+                       y = label_train,
                        n.trees = 400,
                        distribution = "multinomial",
                        interaction.depth = params,
                        shrinkage = 0.2,
                        n.minobsinnode = 30,
                        verbose = F)
-    return(gbm.fit)
+    best_ntrees <- gbm.perf(gbm.fit,method = "OOB",plot.it = FALSE)
+    
+    return(list(fit = gbm.fit,best_n.trees = best_ntrees))
   }
   
 }
