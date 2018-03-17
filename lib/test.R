@@ -26,5 +26,9 @@ test.gbm <- function(fit_train, dat_test, params = NULL,
                          type="response")
     pred<- apply(prob.pred, 1, which.max) 
   } 
+  
+  if(test.svm){
+    pred <- predict(fit_train$fit, newdata = dat_test)
+  }
 }
 

@@ -76,8 +76,8 @@ model_labels = paste("GBM with depth =", model_values)
 For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
 
 ```{r train_label}
-label_train <- read.csv('../data/label_train.csv', header = T)
-
+label_train <- read.csv('../output/sift_train.csv', header = T)
+label_train <- label_train[,2]
 ```
 
 ### Step 3: construct visual feature
@@ -109,7 +109,7 @@ For this simple example, we use the row averages of raw pixel values as the visu
 # #save(dat_test, file="./output/feature_test.RData")
 
 if(run.sift){
-  dat_test <- read.csv('../data/sift_train.csv',header = F)
+  dat_test <- read.csv('../output/sift_test.csv',header = T)
   dat_test <- dat_test[,-1]
 }
 ```
@@ -137,8 +137,8 @@ source("../lib/test.R")
 source("../lib/cross_validation.R")
 
 if(run.sift){
-  dat_train <- read.csv('../data/sift_train.csv',header = F)
-  dat_train <- dat_train[, -1]
+  dat_train <- read.csv('../output/sift_train.csv', header = T)
+  dat_train <- dat_train[, 2:length(dat_train[1,])]
 }
 
 # which model to perform cross validation

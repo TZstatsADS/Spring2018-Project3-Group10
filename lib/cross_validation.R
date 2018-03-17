@@ -10,7 +10,6 @@ cv.function.gbm <- function(X.train, y.train, d, K,
                         gbm = F){
   
   
-  y.train <- y.train[,3]
   n <- length(y.train)
   n.fold <- floor(n/K)
   s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  

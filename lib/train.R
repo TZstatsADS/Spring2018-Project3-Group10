@@ -37,4 +37,18 @@ train.gbm <- function(dat_train, label_train, params=NULL,
     return(list(fit = gbm.fit,best_n.trees = best_ntrees))
   }
   
+  
+  ## SVM model
+  svm <- NULL
+  if(run.svm){
+    if( !require("e1071" )){
+      installed.packages("e1071")
+    }
+    library("e1071")
+    
+    svm.fit <- svm(dat_train, label_train[,3], type = "C", kernel = "radial", gamma = params)
+    
+    return(list(svm = svm.fit))
+  }
+  
 }
