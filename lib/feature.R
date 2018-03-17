@@ -1,39 +1,74 @@
-#############################################################
-### Construct visual features for training/testing images ###
-#############################################################
+################################################################################
+### Construct visual features for training/testing images  ###
+################################################################################
 
-### Authors: Yuting Ma/Tian Zheng
-### Project 3
-### ADS Spring 2017
+### Authors: Group 10 
+### ADS Spring 2018 Project 3
 
-feature <- function(img_dir, set_name, data_name="data", export=T){
-  
+### load libraries
+source("http://bioconductor.org/biocLite.R")
+biocLite("EBImage")
+library("OpenImageR")
+
+################################################################################
+### BEGIN SIFT ###
+################################################################################
+feature <- function(img_dir, 
+                    n_pixel_row = 20, n_pixel_col = 20,
+                    export=T){
   ### Construct process features for training/testing images
   ### Sample simple feature: Extract row average raw pixel values as features
   
   ### Input: a directory that contains images ready for processing
   ### Output: an .RData file contains processed features for the images
   
-  ### load libraries
-  library("EBImage")
-  
   n_files <- length(list.files(img_dir))
-  
-  ### determine img dimensions
-  img0 <-  readImage(paste0(img_dir, "img", "_", data_name, "_", set_name, "_", 1, ".jpg"))
-  mat1 <- as.matrix(img0)
-  n_r <- nrow(img0)
+  img0 <-  readImage(paste0(img_dir, list.files(img_dir)[1], sep = ""))
+  img0 <- EBImage::resize(img0, n_pixel_row, n_pixel_col)
   
   ### store vectorized pixel values of images
-  dat <- matrix(NA, n_files, n_r) 
+  dat <- matrix(NA, n_files, nrow(as.matrix(img0))) 
   for(i in 1:n_files){
-    img <- readImage(paste0(img_dir,  "img", "_", data_name, "_", set_name, "_", i, ".jpg"))
+    img <- readImage(paste0(img_dir, list.files(img_dir)[i], sep = ""))
     dat[i,] <- rowMeans(img)
+  }
+
+  ### output constructed features
+  if(export){
+    save(dat, file=paste0("../output/feature_SIFT.RData"))
+  }
+  return(dat)
+}
+################################################################################
+### END SIFT ###
+################################################################################
+
+################################################################################
+### BEGIN HOG ###
+################################################################################
+
+feature_HOG <- function(img_dir, n_hogs = 54, 
+                        width = 20, height = 20,
+                        export=T){
+  
+  n_files <- length(list.files(img_dir))
+  H <- matrix(NA, n_files, n_hogs)
+  for (i in 1:n_files){
+    img <- readImage(paste0(img_dir, list.files(img_dir)[i], sep = ""))
+    img <- EBImage::resize(img, width, height)
+    H[i,] <- HOG(img)
   }
   
   ### output constructed features
   if(export){
-    save(dat, file=paste0("../output/feature_", data_name, "_", set_name, ".RData"))
+    save(H, file=paste0("../output/feature_HOG.RData"))
   }
-  return(dat)
+  return(H)
 }
+
+################################################################################
+### END HOG ###
+################################################################################
+
+dir <- "../data/images/"
+feature_HOG(dir)
