@@ -6,13 +6,12 @@
 
 Term: Spring 2018
 
-+ Team #
++ Team 10
 + Team members
-	+ team member 1
-	+ team member 2
-	+ team member 3
-	+ team member 4
-	+ team member 5
+	+ Xinlei Cao
+	+ Wenyuan Gu
+	+ Wenshan Wang
+	+ Yiyi Zhang
 
 + Project summary: In this project, we created a classification engine for images of dogs versus fried chicken versus blueberry muffins. 
 	
