@@ -6,8 +6,8 @@
 ### Project 3
 ### ADS Spring 2018
 
-test.gbm <- function(fit_train, dat_test, params = NULL,
-                 test.gbm = F){
+test <- function(fit_train, dat_test, params = NULL,
+                 test.gbm = F, test.svm = F, test.xgboost = F){
   
   ### Fit the classfication model with testing data
   
@@ -28,7 +28,14 @@ test.gbm <- function(fit_train, dat_test, params = NULL,
   } 
   
   if(test.svm){
-    pred <- predict(fit_train$fit, newdata = dat_test)
+    pred <- predict(fit_train, newdata = dat_test)
   }
+  
+  if(test.xgboost) {
+    pred <- predict(fit_train, newdata = dat_test)
+    pred <- pred + 1
+  }
+  
+  return(pred)
 }
 
