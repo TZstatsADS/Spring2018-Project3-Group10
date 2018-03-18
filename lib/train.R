@@ -7,8 +7,8 @@
 ### ADS Spring 2018
 
 
-train.gbm <- function(dat_train, label_train, params=NULL,
-                  run.gbm = F){
+train <- function(dat_train, label_train, params=NULL,
+                  run.gbm = F, run.svm = F, run.xgboost = F){
   
   ### Train a Gradient Boosting Model (GBM) using processed features from training images
   
@@ -42,13 +42,36 @@ train.gbm <- function(dat_train, label_train, params=NULL,
   svm <- NULL
   if(run.svm){
     if( !require("e1071" )){
-      installed.packages("e1071")
+      install.packages("e1071")
     }
     library("e1071")
     
-    svm.fit <- svm(dat_train, label_train[,3], type = "C", kernel = "radial", gamma = params)
+    svm.fit <- svm(dat_train, label_train, 
+                   type = "C", kernel = "radial", gamma = params)
     
-    return(list(svm = svm.fit))
+    # type = "C", kernel = "radial", 
+    return(svm = svm.fit)
   }
+  
+  
+  ## xgboost model
+  xgboost <- NULL
+  if(run.xgboost){
+    if( !require("xgboost" )){
+      install.packages("xgboost")
+    }
+    library("xgboost")
+    dtrain=xgb.DMatrix(data=dat_train,label=label_train)
+    param <- list("objective" = "multi:softmax",
+                  "eval_metric" = "mlogloss",
+                  "num_class" = 3, 'eta' = params, 'max_depth' = 4,
+                  "nthread" = 2, "colsample_bytre" = 0.5, "min_child_weight" = 2,
+                  "subsample" = 0.5, "gamma" = 0.04)
+    xgboost.fit <- xgb.train(data = dtrain,  param = param, nrounds = 1000)
+    return(xgboost.fit)
+    
+  }
+  
+  
   
 }
