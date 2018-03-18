@@ -1,6 +1,6 @@
 conf.dataDir = '../data/images/' ; % data (image) directory 
 conf.outDir = '../output/'; % output directory
-conf.lbpPath = fullfile(conf.outDir, 'feature_LBP.csv');
+conf.lbpPath = fullfile(conf.outDir, 'feature_LBP.mat');
 
 img_path = dir(strcat(conf.dataDir,'*.jpg')); 
 lbp = zeros(length(img_path), 59);
@@ -17,3 +17,4 @@ for a = 1:length(img_path)
 end
 
 save(conf.lbpPath, 'lbp')
+csvwrite('../output/feature_LBP.csv', lbp)
