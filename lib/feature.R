@@ -18,8 +18,7 @@ library("OpenImageR")
 ### BEGIN SIFT ###
 
 feature_SIFT <- function(img_dir, 
-                         width = 20, height = 20,
-                         export=T){
+                         width = 20, height = 20){
   ### Construct process features for training/testing images
   ### Sample simple feature: Extract row average raw pixel values as features
   
@@ -37,11 +36,6 @@ feature_SIFT <- function(img_dir,
     img <- EBImage::resize(img, width, height)
     sift[i,] <- rowMeans(img)
   }
-
-  ### output constructed features
-  if(export){
-    save(sift, file=paste0("../output/feature_SIFT.RData"))
-  }
   return(sift)
 }
 
@@ -52,8 +46,7 @@ feature_SIFT <- function(img_dir,
 ### BEGIN HOG ###
 
 feature_HOG <- function(img_dir, n_hogs = 54, 
-                        width = 20, height = 20,
-                        export=T){
+                        width = 20, height = 20){
   ### Construct process features for training/testing images
   
   ### Input: a directory that contains images ready for processing
@@ -66,18 +59,56 @@ feature_HOG <- function(img_dir, n_hogs = 54,
     img <- EBImage::resize(img, width, height)
     hog[i,] <- HOG(img)
   }
-  
-  ### output constructed features
-  if(export){
-    save(hog, file=paste0("../output/feature_HOG.RData"))
-  }
   return(hog)
 }
 
 ### END HOG ###
 ################################################################################
 
-### following should be called in the main.Rmd
-dir <- "../data/training/"
-feature_SIFT(dir)
-feature_HOG(dir)
+################################################################################
+### BEGIN feature() ###
+
+feature <- function(img_dir, 
+                    run.sift = F, run.hog = F, run.lbp = F,
+                    export = T){
+  ### Construct process features for training/testing images
+  
+  ### run SIFT feature extraction
+  sift <- NULL
+  if(run.sift){
+    sift <- feature_SIFT(img_dir)
+    
+    ### output constructed features
+    if(export){
+      save(sift, file=paste0("../output/feature_SIFT.RData"))
+    }
+    
+    return(sift)
+  }
+  
+  ### run HOG feature extraction
+  hog <- NULL
+  if(run.hog){
+    hog <- feature_HOG(img_dir)
+    
+    ### output constructed features
+    if(export){
+      save(hog, file=paste0("../output/feature_HOG.RData"))
+    }
+    
+    return(hog)   
+  }  
+  
+  ### run LBP feature extraction
+  lbp <- NULL
+  if(run.lbp){
+    lbp <- read.csv('../output/feature_LBP.csv',header = F)
+    return(lbp)
+  }    
+  
+}
+
+### END feature() ###
+################################################################################
+
+
