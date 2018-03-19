@@ -11,7 +11,7 @@ The output directory contains analysis output, processed datasets, logs, or othe
     + [`hot_train.csv`](hot_train.csv): training set  
     + [`hog_test.csv`](hog_test.csv): test set 
   + [`feature_LBP.mat`](feature_LBP.mat)/[`feature_LBP.csv`](feature_LBP.csv): contain processed features for the images using LBP method. 
-    + [`lbp_train.cvs`](lbp_train.cvs): training set
+    + [`lbp_train.csv`](lbp_train.csv): training set
     + [`lbp_test.csv`](lbp_test.csv): test set  
 + **Classification Model**  
   + [`err_cv.RData`](err_cv.RData):  
