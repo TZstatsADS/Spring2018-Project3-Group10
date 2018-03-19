@@ -67,7 +67,7 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 
 
 ```{r exp_setup}
-run.cv=F # run cross-validation on the training set
+run.cv=T # run cross-validation on the training set
 K <- 5  # number of CV folds
 run.feature=FALSE # process features
 run.test=TRUE # run evaluation on an independent test set
@@ -95,13 +95,13 @@ Using cross-validation or independent test set evaluation, we compare the perfor
 
 ```{r model_setup}
 model_values <- seq(3, 11, 2) # depth for GBM
-model_labels = paste("GBM with depth =", model_values)
+# model_labels = paste("GBM with depth =", model_values)
 
 svm_values <- seq(0.01, 0.1, by = 0.02) # gamma for svm
-svm_labels = paste("SVM with gamma =", svm_values)
+# svm_labels = paste("SVM with gamma =", svm_values)
 
-xgboost_values <- seq(0.1, 0.3, by = 0.1) # eta for xgboost
-xgboost_labels = paste("XGBoost with eta =", xgboost_values)
+xgboost_values <- seq(0.1, 0.5, by = 0.1) # eta for xgboost
+# xgboost_labels = paste("XGBoost with eta =", xgboost_values)
 
 ```
 
@@ -191,14 +191,10 @@ source("../lib/test.R")
 ```
 
 #### Model selection with cross-validation
-* Do model selection by choosing among different values of training model parameters, that is, the interaction depth for GBM in this example. 
+* Do model selection by choosing among different values of training model parameters. 
+
 ```{r runcv, message=FALSE, warning=FALSE}
 source("../lib/cross_validation.R")
-
-# which model to perform cross validation
-cv.gbm = F
-cv.svm = F
-cv.xgboost = T
 
 if(run.cv){
   if(cv.gbm){
@@ -287,20 +283,35 @@ if(run.cv){
 ```
 
 
-* Choose the "best" parameter value
+* List cross validation results and choose the "best" parameter value for each model and each feature.
 ```{r best_model}
-if(run.cv){
-  model_best=model_values[1]
-  # Best parameter for GBM
-  if(run.gbm){
-    model_best <- model_values[which.min(err_cv[,1])]
-  }
-}
+source("../lib/cv_result.R")
 
-par_best <- list(depth=model_best)
+cv.result <- cv_result()
 ```
 
-* Train the model with the entire training set using the selected model (model parameter) via cross-validation.
+Tune `depth` in GBM
+```{r}
+cv.result[[1]]
+```
+
+Tune `gamma` in SVM
+```{r}
+cv.result[[2]]
+```
+
+Tune `mtry` and `ntree` in Random Forest for feature hog
+```{r}
+cv.result[[3]]
+```
+
+Tune `mtry` and `ntree` in Random Forest for feature lbp
+```{r}
+cv.result[[4]]
+```
+
+
+* Train models with the entire training set using the selected model (model parameter) via cross-validation.
 ```{r final_train}
 
 if(run.gbm){
