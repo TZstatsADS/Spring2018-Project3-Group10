@@ -14,4 +14,5 @@ The output directory contains analysis output, processed datasets, logs, or othe
     + `lbp_train.cvs`: train set for cv   
     + `lbp_test.csv`: test set for cv  
 + **Classification Model**  
+  + `err_cv.RData`:  
 
