@@ -4,6 +4,6 @@
 
 The doc directory contains the report or presentation files. It can have subfolders.  
 
-+ `main.Rmd`: project report
++ [`main.Rmd`](main.Rmd): project report
 + `project3_desc.md`: project description
 + `a_note_on_contributions.md`: contribution statement
