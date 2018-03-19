@@ -8,7 +8,7 @@
 
 
 train <- function(dat_train, label_train, params=NULL,
-                  run.gbm = F, run.svm = F, run.xgboost = F){
+                  run.gbm = F, run.svm = F, run.xgboost = F,run.log = F,run.rf = F){
   
   ### Train a Gradient Boosting Model (GBM) using processed features from training images
   
@@ -64,14 +64,42 @@ train <- function(dat_train, label_train, params=NULL,
     dtrain=xgb.DMatrix(data=dat_train,label=label_train)
     param <- list("objective" = "multi:softmax",
                   "eval_metric" = "mlogloss",
-                  "num_class" = 3, 'eta' = params, 'max_depth' = 4,
+                  "num_class" = 3, 'eta' = params, 'max_depth' = 6,
                   "nthread" = 2, "colsample_bytre" = 0.5, "min_child_weight" = 2,
-                  "subsample" = 0.5, "gamma" = 0.04)
+                  "subsample" = 0.7, "gamma" = 0.02)
     xgboost.fit <- xgb.train(data = dtrain,  param = param, nrounds = 1000)
     return(xgboost.fit)
     
   }
   
+  ## logistic regression
+  log <- NULL
+  if(run.log){
+    if( !require("nnet")){
+      install.packages("nnet")
+    }
+    library("nnet")
+
+    dat_train_complete <- cbind(label_train,dat_train)
+    log.fit = multinom(label~., 
+                       data = dat_train_complete, 
+                       MaxNWts=16000)
+    
+    return(fit = log.fit)
+  }
   
+  ## random forest
+  rf <- NULL
+  if(run.rf){
+    library(randomForest)
+    library(caret)
+    library(e1071)
+    
+    rf.fit <- randomForest(as.factor(label_train) ~ .,
+                        data = dat_train, mtry = params[1],
+                        importance=TRUE, 
+                        ntree = param[2])
+    return(fit = rf.fit)
+  }
   
 }
