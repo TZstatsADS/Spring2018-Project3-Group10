@@ -77,6 +77,7 @@ feature_HOG <- function(img_dir, n_hogs = 54,
 ### END HOG ###
 ################################################################################
 
-dir <- "../data/images/"
+### following should be called in the main.Rmd
+dir <- "../data/training/"
 feature_SIFT(dir)
 feature_HOG(dir)
