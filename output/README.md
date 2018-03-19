@@ -5,8 +5,8 @@ The output directory contains analysis output, processed datasets, logs, or othe
 
 + **Feature Extraction**  
   + [`feature_SIFT.RData`](feature_SIFT.RData): contains processed features for the images using SIFT method. 
-    + [`sift_train.csv`](sift_train.csv)/[`resize_train.csv`](resize_train.csv): training set 
-    + [`sift_test.csv`](sift_test.csv)/[`resize_test.csv`](resize_test.csv): test set 
+    + [`sift_train.csv`](sift_train.csv)/[`resize_sift_train.csv`](resize_sift_train.csv): training set 
+    + [`sift_test.csv`](sift_test.csv)/[`resize_sift_test.csv`](resize_sift_test.csv): test set 
   + [`feature_HOG.RData`](feature_HOG.RData): contains processed features for the images using HOG method.  
     + [`hot_train.csv`](hot_train.csv): training set  
     + [`hog_test.csv`](hog_test.csv): test set 
