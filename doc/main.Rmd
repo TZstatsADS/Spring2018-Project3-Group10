@@ -101,9 +101,10 @@ if(run.lbp){
   feature_name <- "lbp"
 }
 
-# run feature extraction 
-feature <- NULL
+# run feature extraction
 source("../lib/feature.R")
+
+feature <- NULL
 if(run.feature){
   features <- feature(experiment_dir, 
                       run.sift = run.sift, run.hog = run.hog, run.lbp = run.lbp,  
@@ -122,13 +123,17 @@ if(run.feature){
   }
 }
 
+# constructing the feature path name
+train_path <- paste0("../output/", feature_name, "_train.csv")
+test_path <- paste0("../output/", feature_name, "_test.csv")
+
 # split train and test sets
 source("../lib/split_train_test.R")
-
-
-# #save(dat_train, file="./output/feature_train.RData")
-# #save(dat_test, file="./output/feature_test.RData")
-
+data <- split_train_test(features)
+write.csv(data$train, train_path)
+write.csv(data$test, test_path)
+#save(data$train, file=paste0("../output/", feature_name, "_train.RData"))
+#save(data$test, file=paste0("../output/", feature_name, "_test.RData"))
 ```
 
 ### Step 3: import train and test sets.
@@ -136,11 +141,6 @@ source("../lib/split_train_test.R")
 For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
 
 ```{r train_label}
-
-# constructing the feature path name
-test_path <- paste0("../output/", feature_name, "_test.csv")
-train_path <- paste0("../output/", feature_name, "_train.csv")
-
 # read test dataset
 dat_test <- read.csv(test_path, header = T)
 dat_test <- dat_test[,-1]
@@ -150,7 +150,6 @@ dat_train <- read.csv(train_path, header = T)
 dat_train <- dat_train[, 3:length(dat_train[1,])]
 label_train <- read.csv(train_path, header = T)
 label_train <- label_train[,2]
-
 ```
 
 ### Step 4: Train a classification model with training images
