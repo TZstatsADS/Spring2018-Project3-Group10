@@ -14,20 +14,20 @@ source("../lib/cross_validation.R")
 
 # which model to perform cross validation
 run.cv = T
-cv.gbm = T
+cv.xgboost = T
 K = 5
-model_values <- seq(3, 11, 2) # depth for GBM
-model_labels = paste("GBM with depth =", model_values)
+xgboost_values <- seq(0.1, 0.3, by = 0.1) # eta for xgboost
+xgboost_labels = paste("XGBoost with eta =", xgboost_values)
 
 #
 if(run.cv){
-  if(cv.gbm){
-    err_cv <- array(dim=c(length(model_values), 2))
-    for(k in 1:length(model_values)){
+  if(cv.xgboost){
+    err_cv <- array(dim=c(length(xgboost_values), 2))
+    for(k in 1:length(xgboost_values)){
       cat("k=", k, "\n")
-      err_cv[k,] <- cv.function(as.data.frame(dat_train), label_train, model_values[k], K, cv.gbm = T)
+      err_cv[k,] <- cv.function(as.data.frame(dat_train), label_train, xgboost_values[k], K, cv.xgboost = T)
     }
   }
-
-  save(err_cv, file="../output/err_cv_sift_gbm.RData")
+  
+  save(err_cv, file="../output/err_cv_sift_xg.RData")
 }

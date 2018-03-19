@@ -1,39 +1,57 @@
-library(randomForest, lib.loc = "C:\\Users\\Administrator\\AppData\\Local\\Temp\\RtmpgN0kEC\\downloaded_packages" )
-library(caret, lib.loc = "C:\\Users\\Administrator\\AppData\\Local\\Temp\\RtmpgN0kEC\\downloaded_packages")
-library(e1071, lib.loc = "C:\\Users\\Administrator\\AppData\\Local\\Temp\\RtmpgN0kEC\\downloaded_packages")
+#
+library(randomForest)
+library(caret)
+library(e1071)
 
-##
 setwd("~/GitHub/Spring2018-Project3-spring2018-project3-group10/doc")
-sift <- read.csv('../data/SIFT_train.csv',header = F)
-sift <- sift[,-1]
-dim(sift)
+getwd()
 
-features <- sift
+
+#
+features <- read.csv('../data/SIFT_train.csv',header = F)
+features <- features[,-1]
 labels_set <- read.csv('../data/label_train.csv')
 labels <- labels_set[,3]
 dataset <- cbind(labels,features)
 dim(dataset)
-colnames(dataset)
 
-#--------------Caret Package for Tuning Parameters-------------
-#----------------Two Parameters: mtry & ntree------------------
+#
+mtry.range=c(5:15)
+ntree.range=c(1000, 1500, 2000, 2500)
 
-customRF <- list(type = "Classification", library = "randomForest", loop = NULL)
-customRF$parameters <- data.frame(parameter = c("mtry", "ntree"), class = rep("numeric", 2), label = c("mtry", "ntree"))
-customRF$grid <- function(x, y, len = NULL, search = "grid") {}
-customRF$fit <- function(x, y, wts, param, lev, last, weights, classProbs, ...) {
-  randomForest(x, y, mtry = param$mtry, ntree=param$ntree, ...)
+cv.error <- matrix(NA,ncol = 4,nrow = 11)
+rownames(cv.error) <- mtry.range
+colnames(cv.error) <- ntree.range
+
+for (i in 1:11){
+  for (j in 1:4){
+    
+    error <- rep(NA,5)
+    
+    for (k in 1:5){
+      
+      n <- length(labels)
+      n.fold <- floor(n/5)
+      s <- sample(rep(1:5, each = n.fold)) 
+      
+      train <- dataset[s != k,]
+      test <- dataset[s == k,]
+      train_labels <- train[,1]
+      train_features <- train[,2:ncol(train)]
+      test_labels <- test[,1]
+      test_features <- test[,2:ncol(test)]
+      
+      fit <- randomForest(as.factor(train_labels) ~ .,
+                          data = train_features, mtry = mtry.range[i],
+                          importance=TRUE, 
+                          ntree=ntree.range[j])
+      
+      Prediction <- predict(fit, test_features)
+      Accuracy <- sum(Prediction == test_labels)/length(test_labels)
+      error[k] <- 1 - Accuracy
+    }
+    print(error)
+    
+    cv.error[i,j] <- mean(error)
+  }
 }
-customRF$predict <- function(modelFit, newdata, preProc = NULL, submodels = NULL)
-  predict(modelFit, newdata)
-customRF$prob <- function(modelFit, newdata, preProc = NULL, submodels = NULL)
-  predict(modelFit, newdata, type = "prob")
-customRF$sort <- function(x) x[order(x[,1]),]
-customRF$levels <- function(x) x$classes
-
-control <- trainControl(method="repeatedcv", number=5, repeats=2) # 5-fold cross validation and 2 repeats
-tunegrid <- expand.grid(.mtry=c(5:15), .ntree=c(1000, 1500, 2000, 2500))
-set.seed(123)
-custom <- train(as.factor(labels)~., data=dataset, method=customRF, tuneGrid=tunegrid, trControl=control)
-summary(custom)
-plot(custom)

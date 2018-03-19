@@ -2,9 +2,10 @@ setwd("~/GitHub/Spring2018-Project3-spring2018-project3-group10/doc")
 getwd()
 
 # read train dataset
-dat_train <- read.csv('../data/SIFT_train.csv', header = F)
+load('../output/feature_HOG.RData')
+dat_train <- hog
+dim(dat_train)
 label_train <- read.csv('../data/label_train.csv')
-dat_train <- dat_train[, -1]
 label_train <- label_train[,3]
 
 #
@@ -28,6 +29,6 @@ if(run.cv){
       err_cv[k,] <- cv.function(as.data.frame(dat_train), label_train, model_values[k], K, cv.gbm = T)
     }
   }
-
-  save(err_cv, file="../output/err_cv_sift_gbm.RData")
+  
+  save(err_cv, file="../output/err_cv_HOG_gbm.RData")
 }

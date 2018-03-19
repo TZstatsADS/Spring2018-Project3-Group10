@@ -8,7 +8,8 @@ getwd()
 
 
 #
-features <- read.csv('../output/feature_LBP.csv',header = F)
+load('../output/feature_HOG.RData')
+features <- hog
 labels_set <- read.csv('../data/label_train.csv')
 labels <- labels_set[,3]
 dataset <- cbind(labels,features)
@@ -54,4 +55,5 @@ for (i in 1:11){
     cv.error[i,j] <- mean(error)
   }
 }
-save(cv.error, file="../output/err_cv_lbp_RF.RData")
+
+save(cv.error, file="../output/err_cv_HOG_RF.RData")

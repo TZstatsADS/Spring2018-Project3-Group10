@@ -8,15 +8,6 @@
 
 cv.function <- function(X.train, y.train, d, K,
                         cv.gbm = F, cv.svm = F, cv.xgboost = F){
-  #######
-  i = 1
-  d = 0.1
-  cv.xgboost = T
-  K = 5
-  data <- read.csv("../output/feature_LBP.csv", header = F)
-  X.train <- data
-  y.train <- read.csv("../data/label_train.csv", header = T)
-  y.train <- y.train[,3]
 
   ########
   
@@ -30,8 +21,8 @@ cv.function <- function(X.train, y.train, d, K,
     train.label <- y.train[s != i]
     test.data <- X.train[s == i,]
     test.label <- y.train[s == i]
-    # print('train.data:')
-    # print(dim(train.data))
+     print('train.data:')
+     print(dim(train.data))
     
     test.data <- as.matrix(test.data)
 
