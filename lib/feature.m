@@ -1,4 +1,4 @@
-conf.dataDir = '../data/images/' ; % data (image) directory 
+conf.dataDir = '../data/train/' ; % data (image) directory 
 conf.outDir = '../output/'; % output directory
 conf.lbpPath = fullfile(conf.outDir, 'feature_LBP.mat');
 
