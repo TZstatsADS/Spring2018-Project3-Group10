@@ -2,10 +2,11 @@ setwd("~/GitHub/Spring2018-Project3-spring2018-project3-group10/doc")
 getwd()
 
 # read train dataset
-dat_train <- read.csv('../data/SIFT_train.csv', header = F)
+load('../output/feature_HOG.RData')
 label_train <- read.csv('../data/label_train.csv')
-dat_train <- dat_train[, -1]
+dat_train <- hog
 label_train <- label_train[,3]
+dim(dat_train)
 
 #
 source("../lib/train.R")
@@ -20,7 +21,6 @@ xgboost_values <- seq(0.1, 0.5, by = 0.1) # eta for xgboost
 xgboost_labels = paste("XGBoost with eta =", xgboost_values)
 
 #
-k=5
 if(run.cv){
   if(cv.xgboost){
     err_cv <- array(dim=c(length(xgboost_values), 2))
@@ -30,5 +30,5 @@ if(run.cv){
     }
   }
   
-  save(err_cv, file="../output/err_cv_sift_xg.RData")
+  save(err_cv, file="../output/err_cv_hog_xg.RData")
 }

@@ -7,7 +7,7 @@
 ### ADS Spring 2018
 
 test <- function(fit_train, dat_test, params = NULL,
-                 test.gbm = F, test.svm = F, test.xgboost = F){
+                 test.gbm = F, test.svm = F, test.xgboost = F,test.log = F,test.rf = F){
   
   ### Fit the classfication model with testing data
   
@@ -34,6 +34,14 @@ test <- function(fit_train, dat_test, params = NULL,
   if(test.xgboost) {
     pred <- predict(fit_train, newdata = dat_test)
     pred <- pred + 1
+  }
+  
+  if(test.log){
+    pred <- predict(fit_train, newdata = dat_test)
+  }
+  
+  if(test.rf){
+    pred <- predict(fit_train, newdata = dat_test)
   }
   
   return(pred)
