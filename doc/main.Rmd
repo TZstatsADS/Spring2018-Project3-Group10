@@ -41,7 +41,7 @@ library("xgboost")
 
 ### Step 0: specify directories.
 
-Set the working directory to the image folder. Specify the training and the testing set. For data without an independent test/validation set, you need to create your own testing data by random subsampling. In order to obain reproducible results, set.seed() whenever randomization is used. 
+Set the working directory to the image folder. Specify the training and the testing set.
 
 ```{r wkdir, eval=FALSE}
 # setwd("../Spring2018-Project3-Group10") 
@@ -64,7 +64,6 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 + (T/F) process features for images  
 + (T/F) run evaluation on an independent test set 
 + (T/F) process features for test set
-
 
 ```{r exp_setup}
 run.cv=T # run cross-validation on the training set
@@ -106,9 +105,10 @@ xgboost_values <- seq(0.1, 0.5, by = 0.1) # eta for xgboost
 ```
 
 
-### Step 2: construct visual feature and split
+### Step 2: construct visual feature and split train and test sets
+The baseline model uses scale-invariant feature transform (SIFT) algorithm to extract features, which have 5000 dimensions and are extremely over-weighted. We then have decided to explore a couple of other visual descriptors, including histogram of oriented gradients (HOG) and Local binary patterns (LBP), which produce 55 dimensions and 59 dimensions respectively.  
 
-Construct visual feature, then split train and test sets
+As we do not have the data with an independent test set, we have create our own testing data by random subsampling. We have used balanced partition to split the data, such that 80% as training set and 20% as test set. In order to obain reproducible results, we have set seed to be 123. 
 
 ```{r feature}
 # set up feature name
