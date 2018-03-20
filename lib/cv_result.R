@@ -17,20 +17,19 @@ cv_result <- function(){
   cv_gbm <- as.data.frame(cv_gbm)
   
   ### XGBoost model
-  xgboost_values <- seq(0.1, 0.5, by = 0.1) # eta for xgboost
-  xgboost_labels = paste("eta =", xgboost_values)
-  
-  load("../output/cv_error/hog+xgboost_err_cv.RData")
-  hog_xgboost <- err_cv[,1]
-  
-  load("../output/cv_error/lbp+xgboost_err_cv.RData")
-  lbp_xgboost <- err_cv[,1]
-  
+  load("../output/cv_error/err_cv_hog_xg.RData")
+  hog_cv <- err_cv[,1]
+  load("../output/cv_error/err_cv_lbp_xg.RData")
+  lbp_cv <- err_cv[,1]
   load("../output/cv_error/err_cv_sift_xg.RData")
-  sift_xgboost <- err_cv[,1]
+  sift_cv <- err_cv[,1]
   
-  # cv_xgboost <- rbind(hog_xgboost, rbind(lbp_xgboost, sift_xgboost))
-  # colnames(cv_xgboost) <- xgboost_labels
+  err_cv_xg <- rbind(hog_cv,lbp_cv,sift_cv)
+  err_cv_xg <- as.data.frame(err_cv_xg)
+  
+  rownames(err_cv_xg) <- c("hog_xgboost","lbp_xgboost","sift_xgboost")                         
+  colnames(err_cv_xg) <- c(paste0("eta = ",seq(0.1,0.5,by = 0.1)))
+  
   
   ### SVM model
   load("../output/cv_error/err_cv_HOG_svm.RData")
@@ -65,7 +64,7 @@ cv_result <- function(){
   err_cv_lbp
   
   
-  return(list(cv_gbm, cv_svm = err_cv_svm, err_cv_hog, err_cv_lbp))
+  return(list(cv_gbm, err_cv_xg, cv_svm = err_cv_svm, err_cv_hog, err_cv_lbp))
   
 }
 

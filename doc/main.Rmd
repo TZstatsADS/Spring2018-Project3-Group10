@@ -295,50 +295,39 @@ Tune `depth` in GBM
 cv.result[[1]]
 ```
 
-Tune `gamma` in SVM
+Tune `eta` in XGBoost
 ```{r}
 cv.result[[2]]
 ```
 
-Tune `mtry` and `ntree` in Random Forest for feature hog
+
+Tune `gamma` in SVM
 ```{r}
 cv.result[[3]]
 ```
 
-Tune `mtry` and `ntree` in Random Forest for feature lbp
+Tune `mtry` and `ntree` in Random Forest for feature hog
 ```{r}
 cv.result[[4]]
 ```
 
-
-* Train models with the entire training set using the selected model (model parameter) via cross-validation.
-```{r final_train}
-
-if(run.gbm){
-  tm_train <- system.time(model.gbm <- train(as.data.frame(dat_train), label_train, params = model_best))
-  save(model.gbm, file="../output/model_gbm.RData")
-}
-
+Tune `mtry` and `ntree` in Random Forest for feature lbp
+```{r}
+cv.result[[5]]
+# min(cv.result[[5]])
 
 ```
 
-### Step 5: Make prediction 
-Feed the final training model with the completely holdout testing data. 
-```{r test}
-# tm_test=NA
-if(run.gbm){
-  load(file="../output/model_gbm.RData")
-  tm_test_gbm <- system.time(pred_gbm <- test(model.gbm, dat_test, test.gbm = T))
-  # save(pred_test, file="../output/pred_test.RData")
-  cat("Time for training model = ", tm_test_gbm[1], "s \n")
-}
+
+### Step 5: Train entire training set, compare prediction error and running time
+
+* Train models with the entire training set for each feature using the selected model (model parameter) via cross-validation. Feed the final training model with the completely holdout testing data. 
+```{r}
+source("../lib/model_compare.R")
+
+run.compare <- F
+compare.model(run.compare)
+
 ```
 
-### Summarize Running Time
-Prediction performance matters, so does the running times for constructing features and for training the model, especially when the computation resource is limited. 
-```{r running_time}
-# cat("Time for constructing training features=", tm_feature_train[1], "s \n")
-# cat("Time for constructing testing features=", tm_feature_test[1], "s \n")
-# cat("Time for training model=", tm_train[1], "s \n")
-# cat("Time for making prediction=", tm_test[1], "s \n")
-```
+
