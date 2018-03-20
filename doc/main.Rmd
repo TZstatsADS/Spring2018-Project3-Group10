@@ -1,14 +1,11 @@
 ---
 title: "Project 3"
-author: "Yuting Ma, Tian Zheng"
-date: "February 24, 2016"
+author: "Group 10"
+date: "March 19, 2018"
 output:
   pdf_document: default
   html_document: default
 ---
-In your final repo, there should be an R markdown file that organizes **all computational steps** for evaluating your proposed image classification framework. 
-
-This file is currently a template for running evaluation experiments of image analysis (or any predictive modeling). You should update it according to your codes but following precisely the same structure. 
 
 ```{r}
 if(!require("EBImage")){
@@ -16,12 +13,30 @@ if(!require("EBImage")){
   biocLite("EBImage")
 }
 
-if(!require("gbm")){
-  install.packages("gbm")
+packages.used=c("gbm", "MASS", "OpenImageR", "jpeg", "ggplot2", "reshape2", "randomForest", 
+                "e1071", "xgboost")
+
+# check packages that need to be installed.
+packages.needed=setdiff(packages.used, 
+                        intersect(installed.packages()[,1], 
+                                  packages.used))
+# install additional packages
+if(length(packages.needed)>0){
+  install.packages(packages.needed, dependencies = TRUE,
+                   repos='http://cran.us.r-project.org')
 }
 
+## Loading packages
 library("EBImage")
 library("gbm")
+library("MASS")
+library("OpenImageR")
+library("jpeg")
+library("ggplot2")
+library("reshape2")
+library("randomForest")
+library("e1071")
+library("xgboost")
 ```
 
 ### Step 0: specify directories.
@@ -47,47 +62,51 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 + (T/F) cross-validation on the training set  
 + (number) K, the number of CV folds  
 + (T/F) process features for images  
-~+ (T/F) process features for training set~
-~+ (T/F) process features for test set~  
-+ (T/F) run evaluation on an independent test set   
++ (T/F) run evaluation on an independent test set 
++ (T/F) process features for test set
 
 
 ```{r exp_setup}
-run.cv=TRUE # run cross-validation on the training set
+run.cv=T # run cross-validation on the training set
 K <- 5  # number of CV folds
 run.feature=FALSE # process features
-#run.feature.train=TRUE # process features for training set
-#run.feature.test=TRUE # process features for test set
 run.test=TRUE # run evaluation on an independent test set
+run.test.feature = F # process features for test set
 ```
 
 Which feature extraction method to perform
 ```{r}
 run.sift = F
-run.hog = T
+run.hog = F
 run.lbp = F
 ```
 
-Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. In this example, we use GBM with different `depth`. In the following chunk, we list, in a vector, setups (in this case, `depth`) corresponding to models that we will compare. In your project, you maybe comparing very different classifiers. You can assign them numerical IDs and labels specific to your project. 
+Which model to run
+```{r}
+run.gbm = F
+run.svm = F
+run.xgboost = F
+run.rf = F
+run.logistic = F
+```
+
+
+Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. 
 
 ```{r model_setup}
 model_values <- seq(3, 11, 2) # depth for GBM
-model_labels = paste("GBM with depth =", model_values)
+# model_labels = paste("GBM with depth =", model_values)
 
 svm_values <- seq(0.01, 0.1, by = 0.02) # gamma for svm
-svm_labels = paste("SVM with gamma =", svm_values)
+# svm_labels = paste("SVM with gamma =", svm_values)
 
-xgboost_values <- seq(0.1, 0.3, by = 0.1) # eta for xgboost
-xgboost_labels = paste("XGBoost with eta =", xgboost_values)
+xgboost_values <- seq(0.1, 0.5, by = 0.1) # eta for xgboost
+# xgboost_labels = paste("XGBoost with eta =", xgboost_values)
 
 ```
 
 
-### Step 2: construct visual feature
-
-For this simple example, we use the row averages of raw pixel values as the visual features. Note that this strategy **only** works for images with the same number of rows. For some other image datasets, the feature function should be able to handle heterogeneous input images. Save the constructed features to the output subfolder.
-
-`feature.R` should be the wrapper for all your feature engineering functions and options. The function `feature( )` should have options that correspond to different scenarios for your project and produces an R object that contains features that are required by all the models you are going to evaluate later. 
+### Step 2: construct visual feature and split
 
 Construct visual feature, then split train and test sets
 
@@ -138,7 +157,7 @@ write.csv(data$test, test_path)
 #save(data$test, file=paste0("../output/", feature_name, "_test.RData"))
 ```
 
-### Step 3: import train and test sets.
+### Step 3: Import train and test sets.
 
 For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
 
@@ -172,15 +191,10 @@ source("../lib/test.R")
 ```
 
 #### Model selection with cross-validation
-* Do model selection by choosing among different values of training model parameters, that is, the interaction depth for GBM in this example. 
+* Do model selection by choosing among different values of training model parameters. 
+
 ```{r runcv, message=FALSE, warning=FALSE}
 source("../lib/cross_validation.R")
-
-
-# which model to perform cross validation
-cv.gbm = F
-cv.svm = F
-cv.xgboost = T
 
 if(run.cv){
   if(cv.gbm){
@@ -269,26 +283,36 @@ if(run.cv){
 ```
 
 
-* Choose the "best" parameter value
+* List cross validation results and choose the "best" parameter value for each model and each feature.
 ```{r best_model}
-if(run.cv){
-  model_best=model_values[1]
-  # Best parameter for GBM
-  if(run.gbm){
-    model_best <- model_values[which.min(err_cv[,1])]
-  }
-}
+source("../lib/cv_result.R")
 
-par_best <- list(depth=model_best)
+cv.result <- cv_result()
 ```
 
-* Train the model with the entire training set using the selected model (model parameter) via cross-validation.
+Tune `depth` in GBM
+```{r}
+cv.result[[1]]
+```
+
+Tune `gamma` in SVM
+```{r}
+cv.result[[2]]
+```
+
+Tune `mtry` and `ntree` in Random Forest for feature hog
+```{r}
+cv.result[[3]]
+```
+
+Tune `mtry` and `ntree` in Random Forest for feature lbp
+```{r}
+cv.result[[4]]
+```
+
+
+* Train models with the entire training set using the selected model (model parameter) via cross-validation.
 ```{r final_train}
-if(!run.cv){
-  if(run.gbm){
-    model_best <- 3
-  }
-}
 
 if(run.gbm){
   tm_train <- system.time(model.gbm <- train(as.data.frame(dat_train), label_train, params = model_best))
