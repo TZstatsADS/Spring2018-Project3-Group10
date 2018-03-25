@@ -165,6 +165,8 @@ compare.model <- function(run.compare = F){
     
     sift.result <- as.data.frame(rbind(tm_train, rbind(tm_test, error)))
     colnames(sift.result) <- c("gbm", "svm", "logistic", "rf", "xgboost")
+    
+    write.csv(sift.result, "../output/compare_sift.csv")
   }
   
   compare_hog <- read.csv("../output/compare_hog.csv", header = T)
@@ -173,4 +175,7 @@ compare.model <- function(run.compare = F){
   compare_lbp <- read.csv("../output/compare_lbp.csv", header = T)
   print(compare_lbp)
   
+  compare_sift <- read.csv("../output/compare_sift.csv", header = T)
+  print(compare_sift)
 }
+
