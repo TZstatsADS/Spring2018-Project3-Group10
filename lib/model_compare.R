@@ -54,7 +54,7 @@ compare.model <- function(run.compare = F){
     hog.result <- as.data.frame(rbind(tm_train, rbind(tm_test, error)))
     colnames(hog.result) <- c("gbm", "svm", "logistic", "rf", "xgboost")
     
-    # write.csv(hog.result, "compare_hog.csv")
+    write.csv(hog.result, "compare_hog.csv")
     
     
     
@@ -89,6 +89,7 @@ compare.model <- function(run.compare = F){
     tm_train[5] <- system.time(model.lbp.xgboost <- train(as.data.frame(dat_train), label_train-1, 
                                                           params = 0.1, run.xgboost = T))
     
+    
     tm_test <- rep(NA, 5)
     error <- rep(NA, 5)
     tm_test[1] <- system.time(pred_gbm <- test(model.lbp.gbm, dat_test[,-1], test.gbm = T))
@@ -98,10 +99,10 @@ compare.model <- function(run.compare = F){
     error[2] <- mean(pred_svm != dat_test[,1])  
     
     tm_test[3] <- system.time(pred_log <- test(model.lbp.log, dat_test[,-1], test.log = T))
-    error[3] <- mean(pred_gbm != dat_test[,1])  
+    error[3] <- mean(pred_log != dat_test[,1])  
     
     tm_test[4] <- system.time(pred_rf <- test(model.lbp.rf, dat_test[,-1], test.rf = T))
-    error[4] <- mean(pred_log != dat_test[,1])  
+    error[4] <- mean(pred_rf != dat_test[,1])  
     
     tm_test[5] <- system.time(pred_xgboost <- test(model.lbp.xgboost, as.matrix(dat_test[,-1]), test.xgboost = T))
     error[5] <- mean(pred_xgboost != dat_test[,1])  
@@ -109,13 +110,10 @@ compare.model <- function(run.compare = F){
     lbp.result <- as.data.frame(rbind(tm_train, rbind(tm_test, error)))
     colnames(lbp.result) <- c("gbm", "svm", "logistic", "rf", "xgboost")
     
-    # write.csv(lbp.result, "compare_lbp.csv")
+    write.csv(lbp.result, "compare_lbp.csv")
     
-    
-    
-    
-    
-    
+    ## misclassification table
+    mis_table <- table(pred = pred_log, truth = dat_test[,1])
     
     
     ###### feature sift
@@ -170,12 +168,15 @@ compare.model <- function(run.compare = F){
   }
   
   compare_hog <- read.csv("../output/compare_hog.csv", header = T)
-  print(compare_hog)
+  #print(compare_hog)
   
   compare_lbp <- read.csv("../output/compare_lbp.csv", header = T)
-  print(compare_lbp)
+  #print(compare_lbp)
   
   compare_sift <- read.csv("../output/compare_sift.csv", header = T)
-  print(compare_sift)
+  #print(compare_sift)
+  
+  return(list(compare_sift, compare_hog, compare_lbp))
+  
 }
 
