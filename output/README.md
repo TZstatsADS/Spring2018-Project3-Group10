@@ -14,7 +14,7 @@ The output directory contains analysis output, processed datasets, logs, or othe
     + [`lbp_train.csv`](lbp_train.csv): training set
     + [`lbp_test.csv`](lbp_test.csv): test set  
 + **Classification Model**  
-  + [`compare_sift.csv`](compare_sift.csv):
-  + [`compare_hog.csv`](compare_hog.csv):  
-  + [`compare_lbp.csv`](compare_lbp.csv):
+  + [`compare_sift.csv`](compare_sift.csv): compares the running time and accuracy of models using SIFT features.
+  + [`compare_hog.csv`](compare_hog.csv): compares the running time and accuracy of models using HOG features.
+  + [`compare_lbp.csv`](compare_lbp.csv): compares the running time and accuracy of models using LBP features.
 
