@@ -14,5 +14,7 @@ The output directory contains analysis output, processed datasets, logs, or othe
     + [`lbp_train.csv`](lbp_train.csv): training set
     + [`lbp_test.csv`](lbp_test.csv): test set  
 + **Classification Model**  
-  + [`err_cv.RData`](err_cv.RData):  
+  + [`compare_sift.csv`](compare_sift.csv):
+  + [`compare_hog.csv`](compare_hog.csv):  
+  + [`compare_lbp.csv`](compare_lbp.csv):
 
