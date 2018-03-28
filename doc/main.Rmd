@@ -1,12 +1,16 @@
 ---
 title: "Project 3"
 author: "Group 10"
-date: "March 19, 2018"
+date: "March 28, 2018"
 output:
   pdf_document: default
   html_document: default
 ---
+**Project Summary**: 
+In this project, we have created a classification engine for images of poodles, fried chicken and blueberry muffins. Our goal is to improve the prediction accuracy from the baseline model (GBM with decision stumps on 2000 SIFT features) and to enhance computational efficiency in terms of running time, storage and memory cost. We have examined feature descriptors such as cale-invariant feature transform (SIFT), histogram of oriented gradients (HOG), and local binary pattern (LBP), and evaluated classifiers including Gradient Boosting Machine (GBM), RBF Support Vector Machine (SVM), Random Forest (RF), XGBoost, Logistic Regression, Convolutional Neural Network (CNN). 
 
+### Step 0: install/load packages and specify directories
+Install and load packages.  
 ```{r}
 if(!require("EBImage")){
   source("https://bioconductor.org/biocLite.R")
@@ -39,25 +43,17 @@ library("e1071")
 library("xgboost")
 ```
 
-### Step 0: specify directories.
-
-Set the working directory to the image folder. Specify the training and the testing set.
-
+Set the working directory to the doc folder. Provide directories for raw images. Training set and test set are in different subfolders. 
 ```{r wkdir, eval=FALSE}
-# setwd("../Spring2018-Project3-Group10") 
-# here replace it with your own path or manually set it in RStudio to where this rmd file is located. 
-```
-
-Provide directories for raw images. ~~Training set and test set should be in different subfolders. ~~
-```{r}
-experiment_dir <- "../data/train/" # This will be modified for different data sets.
-# img_train_dir <- paste(experiment_dir, "train/", sep="")
-# img_test_dir <- paste(experiment_dir, "test/", sep="")
+# setwd("../doc/") 
+experiment_dir <- "../data/" # This will be modified for different data sets.
+img_train_dir <- paste(experiment_dir, "train/", sep="")
+img_test_dir <- paste(experiment_dir, "test/", sep="")
 ```
 
 ### Step 1: set up controls for evaluation experiments.
 
-In this chunk, ,we have a set of controls for the evaluation experiments. 
+In this chunk, we have a set of controls for the evaluation experiments.  
 
 + (T/F) cross-validation on the training set  
 + (number) K, the number of CV folds  
@@ -73,22 +69,21 @@ run.test=F # run evaluation on an independent test set
 run.test.feature = F # process features for test set
 ```
 
-Which feature extraction method to perform
+Which feature extraction method to perform  
 ```{r}
 run.sift = F
 run.hog = F
 run.lbp = T
 ```
 
-Which model to run
+Which model to run  
 ```{r}
 run.gbm = F
 run.svm = F
 run.xgboost = F
-run.rf = F
+run.rf = T
 run.logistic = F
 ```
-
 
 Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. 
 
@@ -105,10 +100,10 @@ xgboost_values <- seq(0.1, 0.5, by = 0.1) # eta for xgboost
 ```
 
 
-### Step 2: construct visual feature and split train and test sets
-The baseline model uses scale-invariant feature transform (SIFT) algorithm to extract features, which have 5000 dimensions and are extremely over-weighted. We then have decided to explore a couple of other visual descriptors, including histogram of oriented gradients (HOG) and Local binary patterns (LBP), which produce 55 dimensions and 59 dimensions respectively.  
+### Step 2: construct visual feature and split training and testing sets
+The baseline model uses scale-invariant feature transform (SIFT) algorithm to extract features, which have 2000 dimensions and are extremely over-weighted. We then have decided to explore a couple of other visual descriptors, including histogram of oriented gradients (HOG) and local binary patterns (LBP), which produce 55 dimensions and 59 dimensions respectively.  
 
-As we do not have the data with an independent test set, we have create our own testing data by random subsampling. We have used balanced partition to split the data, such that 80% as training set and 20% as test set. In order to obain reproducible results, we have set seed to be 123. 
+As we do not have the data with an independent test set, we have create our own testing data by random subsampling. We have used balanced partition to split the data, such that 80% as training set and 20% as testing set. In order to obain reproducible results, we have set seed to be 123. 
 
 ```{r feature}
 # set up feature name
@@ -133,6 +128,8 @@ if(run.feature){
 }else{
   if("sift" %in% feature_name){
     load("../output/feature_SIFT.RData")
+    sift2=read.csv("../data/SIFT_train.csv", header = F)
+    dim(sift2)
     features <- sift
   }
   if("hog" %in% feature_name){
@@ -157,9 +154,7 @@ write.csv(data$test, test_path)
 #save(data$test, file=paste0("../output/", feature_name, "_test.RData"))
 ```
 
-### Step 3: Import train and test sets.
-
-For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
+### Step 3: import training and testing sets.
 
 ```{r train_label}
 # read test dataset
@@ -173,18 +168,12 @@ label_train <- read.csv(train_path, header = T)
 label_train <- label_train[,2]
 ```
 
-### Step 4: Train a classification model with training images
+### Step 4: train a classification model with training images
 Call the train model and test model from library. 
 
-`train.R` and `test.R` should be wrappers for all your model training steps and your classification/prediction steps. 
-+ `train.R`
-+ Input: a path that points to the training set features.
-+ Input: an R object of training sample labels.
-+ Output: an RData file that contains trained classifiers in the forms of R objects: models/settings/links to external trained configurations.
-+ `test.R`
-+ Input: a path that points to the test set features.
-+ Input: an R object that contains a trained classifier.
-+ Output: an R object of class label predictions on the test set. If there are multiple classifiers under evaluation, there should be multiple sets of label predictions. 
+`train.R` and `test.R` are wrappers for all model training steps and classification/prediction steps. 
+`train.R`
+
 ```{r loadlib}
 source("../lib/train.R")
 source("../lib/test.R")
@@ -318,7 +307,37 @@ cv.result[[5]]
 
 ```
 
-### Step 5: Implement CNN feature and model using python
+
+
+### Step 5: train entire training set, compare prediction error and running time
+
+Train models with the entire training set for each feature using the selected model (model parameter) via cross-validation. Feed the final training model with the completely holdout testing data. 
+```{r}
+source("../lib/model_compare.R")
+
+run.compare <- F
+compare_result <- compare.model(run.compare)
+
+```
+
+Compare models using SIFT feature
+```{r}
+compare_result[[1]]
+```
+
+Compare models using hog feature
+```{r}
+compare_result[[2]]
+```
+
+Compare models using lbp feature
+```{r}
+compare_result[[3]]
+```
+
+Since logistic model with LBP features has lowest running time and lowest prediction error, we choose our final model to be lbp+logistic. Compared to baseline model (sift+gbm), the training time decreases to 0.33s from 403.53s and prediction accuracy increased by 9.5% from 67.3% to 76.8%.
+
+### Appendix: Implement CNN feature and model using python
 ```{python}
 
 # coding: utf-8
@@ -351,7 +370,7 @@ def form_readlist():
     filenamelist = []
     filelabellist = []
     for index in images_labels_df.index:
-        filenamelist.append('../data/images/' + 
+        filenamelist.append('../data/images/' +
                             images_labels_df.iloc[index, 0][4:] + '.jpg')
         filelabellist.append(images_labels_df.iloc[index, 1]-1)
     return(filenamelist, filelabellist)
@@ -373,14 +392,14 @@ def _parse_function_for_train(filenamelist, filelabellist):
     image_decoded = tf.image.decode_jpeg(image_string, channels = 3)
     image_resized = tf.image.resize_images(image_decoded, [128, 128])
     image_resized = image_resized / 255.0
-    
+
     #Use filp and rotation to carry out the data augmentation of training data
     image_resized = tf.image.random_flip_left_right(image_resized)
     rotate_or_not = random.choice((True, False))
     if rotate_or_not:
         radians = np.random.uniform(-0.262, 0.262)
         image_resized = tf.contrib.image.rotate(image_resized, radians)
-        
+
     label = tf.one_hot(filelabellist, depth = 3)
     return(image_resized, label)
 
@@ -424,7 +443,7 @@ trainlabellist, testlabellist = tf.dynamic_partition(data = filelabellist,
 # In[8]:
 
 
-dataset_train = tf.data.Dataset.from_tensor_slices((trainfilelist, 
+dataset_train = tf.data.Dataset.from_tensor_slices((trainfilelist,
                                                     trainlabellist))
 dataset_train = dataset_train.map(_parse_function_for_train)
 dataset_train = dataset_train.shuffle(buffer_size = 3000).repeat().batch(100)
@@ -463,7 +482,7 @@ def conv2d(x, W):
     return(tf.nn.conv2d(x, W, strides = [1, 1, 1, 1], padding = 'SAME'))
 
 def max_pool_2x2(x):
-    return(tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], 
+    return(tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1],
                           padding = 'SAME'))
 
 
@@ -570,13 +589,13 @@ with tf.Session() as session:
             validation_accuracy = accuracy.eval(feed_dict = {x: validation_x,
                                                              y_true_one_hot: validation_y,
                                                              keep_prob: 1.0})
-            print('step %d, training accuracy %g, validation accuracy %g, time %.3f sec' 
+            print('step %d, training accuracy %g, validation accuracy %g, time %.3f sec'
                   %(i, train_accuracy, validation_accuracy, time.time() - start_time))
-            
+
             time_list.append(time.time() - start_time)
             training_accuracy_list.append(train_accuracy)
             validation_accuracy_list.append(validation_accuracy)
-            
+
         optimizer.run(feed_dict = {x: train_x_batch,
                                    y_true_one_hot: train_y_batch,
                                    keep_prob: 0.7})
@@ -590,29 +609,23 @@ writer.close()
 
 #fig1 = plt.figure()
 #ax = fig1.add_subplot(1, 1, 1)
-#ax.plot(time_list, training_accuracy_list, color = 'green', 
+#ax.plot(time_list, training_accuracy_list, color = 'green',
 #        label = 'Training Accuracy')
-#ax.plot(time_list, validation_accuracy_list, color = 'red', 
+#ax.plot(time_list, validation_accuracy_list, color = 'red',
 #        label = 'Validation Accuracy')
 #ax.legend(loc = 'best')
 #ax.set_xlabel('training time')
 #ax.set_ylabel('accuracy')
 #ax.set_title('CNN Model')
 
-
-
 ```
 
 
-### Step 6: Train entire training set, compare prediction error and running time
 
-* Train models with the entire training set for each feature using the selected model (model parameter) via cross-validation. Feed the final training model with the completely holdout testing data. 
-```{r}
-source("../lib/model_compare.R")
 
-run.compare <- F
-compare.model(run.compare)
 
-```
+
+
+
 
 
