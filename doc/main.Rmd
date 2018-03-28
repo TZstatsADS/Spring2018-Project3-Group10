@@ -66,10 +66,10 @@ In this chunk, ,we have a set of controls for the evaluation experiments.
 + (T/F) process features for test set
 
 ```{r exp_setup}
-run.cv=T # run cross-validation on the training set
+run.cv=F # run cross-validation on the training set
 K <- 5  # number of CV folds
-run.feature=FALSE # process features
-run.test=TRUE # run evaluation on an independent test set
+run.feature=F # process features
+run.test=F # run evaluation on an independent test set
 run.test.feature = F # process features for test set
 ```
 
@@ -77,7 +77,7 @@ Which feature extraction method to perform
 ```{r}
 run.sift = F
 run.hog = F
-run.lbp = F
+run.lbp = T
 ```
 
 Which model to run
@@ -318,8 +318,293 @@ cv.result[[5]]
 
 ```
 
+### Step 5: Implement CNN feature and model using python
+```{python}
 
-### Step 5: Train entire training set, compare prediction error and running time
+# coding: utf-8
+
+# # CNN model
+
+# ## 1. Import necessary packages
+
+# In[1]:
+
+
+import numpy as np
+import tensorflow as tf
+#import matplotlib.pyplot as plt
+import pandas as pd
+import random
+import time
+
+
+
+# ## 2. Read and proprocess data
+
+# #### a) create the path list of images and labels
+
+# In[2]:
+
+
+def form_readlist():
+    images_labels_df = pd.read_csv('../data/label_train.csv')[['img', 'label']]
+    filenamelist = []
+    filelabellist = []
+    for index in images_labels_df.index:
+        filenamelist.append('../data/images/' + 
+                            images_labels_df.iloc[index, 0][4:] + '.jpg')
+        filelabellist.append(images_labels_df.iloc[index, 1]-1)
+    return(filenamelist, filelabellist)
+
+
+# In[3]:
+
+
+filenamelist, filelabellist = form_readlist()
+
+
+# #### b) define the transformation and standardilization of images, transform the labels into one hot vectors
+
+# In[4]:
+
+
+def _parse_function_for_train(filenamelist, filelabellist):
+    image_string = tf.read_file(filenamelist)
+    image_decoded = tf.image.decode_jpeg(image_string, channels = 3)
+    image_resized = tf.image.resize_images(image_decoded, [128, 128])
+    image_resized = image_resized / 255.0
+    
+    #Use filp and rotation to carry out the data augmentation of training data
+    image_resized = tf.image.random_flip_left_right(image_resized)
+    rotate_or_not = random.choice((True, False))
+    if rotate_or_not:
+        radians = np.random.uniform(-0.262, 0.262)
+        image_resized = tf.contrib.image.rotate(image_resized, radians)
+        
+    label = tf.one_hot(filelabellist, depth = 3)
+    return(image_resized, label)
+
+
+# In[5]:
+
+
+def _parse_function_for_validation(filenamelist, filelabellist):
+    image_string = tf.read_file(filenamelist)
+    image_decoded = tf.image.decode_jpeg(image_string, channels = 3)
+    image_resized = tf.image.resize_images(image_decoded, [128, 128])
+    image_resized = image_resized / 255.0
+    label = tf.one_hot(filelabellist, depth = 3)
+    return(image_resized, label)
+
+
+# #### c) seperate the data into training set and validation set
+
+# In[6]:
+
+
+partitions = [0] * len(filelabellist)
+testfilesize = int(len(filelabellist)/5)
+partitions[:testfilesize] = [1] * testfilesize
+random.shuffle(partitions)
+
+
+# In[7]:
+
+
+trainfilelist, testfilelist = tf.dynamic_partition(data = filenamelist,
+                                                   partitions = partitions,
+                                                   num_partitions = 2)
+trainlabellist, testlabellist = tf.dynamic_partition(data = filelabellist,
+                                                     partitions = partitions,
+                                                     num_partitions = 2)
+
+
+# #### d) use the Dataset API to feed the data in CNN model(we shuffle and batch the data)
+
+# In[8]:
+
+
+dataset_train = tf.data.Dataset.from_tensor_slices((trainfilelist, 
+                                                    trainlabellist))
+dataset_train = dataset_train.map(_parse_function_for_train)
+dataset_train = dataset_train.shuffle(buffer_size = 3000).repeat().batch(100)
+iterator_train = dataset_train.make_one_shot_iterator()
+one_batch_train = iterator_train.get_next()
+
+dataset_validation = tf.data.Dataset.from_tensor_slices((testfilelist, testlabellist))
+dataset_validation = dataset_validation.map(_parse_function_for_validation)
+dataset_validation = dataset_validation.batch(testfilesize)
+iterator_validation = dataset_validation.make_one_shot_iterator()
+one_batch_validation = iterator_validation.get_next()
+
+
+# # 3. define the structure of the CNN model
+
+# #### a) Initialization and definitions of functions of CNN model
+
+# In[9]:
+
+
+learning_rate = 1e-3
+
+
+# In[10]:
+
+
+def weight_variable(shape):
+    initial = tf.truncated_normal(shape, stddev=0.1)
+    return(tf.Variable(initial))
+
+def bias_variable(size):
+    initial = tf.constant(0.1, shape=size)
+    return(tf.Variable(initial))
+
+def conv2d(x, W):
+    return(tf.nn.conv2d(x, W, strides = [1, 1, 1, 1], padding = 'SAME'))
+
+def max_pool_2x2(x):
+    return(tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], 
+                          padding = 'SAME'))
+
+
+# #### b) define the structure of CNN model
+
+# In[11]:
+
+
+x = tf.placeholder(tf.float32, shape=[None, 128, 128, 3], name='x')
+y_true_one_hot = tf.placeholder(tf.float32, shape=[None, 3], name='y_')
+y_true_label = tf.argmax(y_true_one_hot, axis=1)
+
+
+# In[12]:
+
+
+W_conv1 = weight_variable([4, 4, 3, 32])
+b_conv1 = bias_variable([32])
+c_conv1 = tf.nn.bias_add(conv2d(x, W_conv1), b_conv1)
+c_pool1 = max_pool_2x2(c_conv1)
+o_conv1 = tf.nn.relu(c_pool1)
+
+
+# In[13]:
+
+
+W_conv2 = weight_variable([4, 4, 32, 32])
+b_conv2 = bias_variable([32])
+c_conv2 = tf.nn.bias_add(conv2d(o_conv1, W_conv2), b_conv2)
+c_pool2 = max_pool_2x2(c_conv2)
+o_conv2 = tf.nn.relu(c_pool2)
+
+
+# In[14]:
+
+
+W_conv3 = weight_variable([4, 4, 32, 64])
+b_conv3 = bias_variable([64])
+c_conv3 = tf.nn.bias_add(conv2d(o_conv2, W_conv3), b_conv3)
+c_pool3 = max_pool_2x2(c_conv3)
+o_conv3 = tf.nn.relu(c_pool3)
+
+
+# In[15]:
+
+
+o_conv3_flat = tf.reshape(o_conv3, [-1, 16 * 16 * 64])
+W_fc1 = weight_variable([16 * 16 * 64, 128])
+b_fc1 = bias_variable([128])
+c_fc1 = tf.nn.bias_add(tf.matmul(o_conv3_flat, W_fc1), b_fc1)
+o_fc1 = tf.nn.relu(c_fc1)
+
+
+# In[16]:
+
+
+keep_prob = tf.placeholder(tf.float32, name = 'keep_prob')
+o_fc1_drop = tf.nn.dropout(o_fc1, keep_prob)
+
+
+# In[17]:
+
+
+W_fc2 = weight_variable([128, 3])
+b_fc2 = bias_variable([3])
+o_fc2 = tf.nn.bias_add(tf.matmul(o_fc1_drop, W_fc2), b_fc2)
+y = tf.nn.softmax(o_fc2)
+y_pred_label = tf.argmax(y, axis = 1)
+
+
+# #### c) define the loss function, optimizer and accuracy of the model
+
+# In[18]:
+
+
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(logits=o_fc2,
+                                                           labels=y_true_one_hot)
+cost = tf.reduce_mean(cross_entropy)
+optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
+
+correct_prediction = tf.equal(y_pred_label, y_true_label)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+
+# # 4. Train the model
+
+# In[19]:
+
+
+time_list = []
+training_accuracy_list = []
+validation_accuracy_list = []
+with tf.Session() as session:
+    writer = tf.summary.FileWriter('./graphs', session.graph)
+    tf.global_variables_initializer().run()
+    start_time = time.time()
+    validation_x, validation_y = session.run(one_batch_validation)
+    for i in range(500):
+        train_x_batch, train_y_batch = session.run(one_batch_train)
+        if i % 10 == 0:
+            train_accuracy = accuracy.eval(feed_dict = {x: train_x_batch,
+                                                        y_true_one_hot: train_y_batch,
+                                                        keep_prob: 1.0})
+            validation_accuracy = accuracy.eval(feed_dict = {x: validation_x,
+                                                             y_true_one_hot: validation_y,
+                                                             keep_prob: 1.0})
+            print('step %d, training accuracy %g, validation accuracy %g, time %.3f sec' 
+                  %(i, train_accuracy, validation_accuracy, time.time() - start_time))
+            
+            time_list.append(time.time() - start_time)
+            training_accuracy_list.append(train_accuracy)
+            validation_accuracy_list.append(validation_accuracy)
+            
+        optimizer.run(feed_dict = {x: train_x_batch,
+                                   y_true_one_hot: train_y_batch,
+                                   keep_prob: 0.7})
+writer.close()
+
+
+# # 5. Visualization
+
+# In[21]:
+
+
+#fig1 = plt.figure()
+#ax = fig1.add_subplot(1, 1, 1)
+#ax.plot(time_list, training_accuracy_list, color = 'green', 
+#        label = 'Training Accuracy')
+#ax.plot(time_list, validation_accuracy_list, color = 'red', 
+#        label = 'Validation Accuracy')
+#ax.legend(loc = 'best')
+#ax.set_xlabel('training time')
+#ax.set_ylabel('accuracy')
+#ax.set_title('CNN Model')
+
+
+
+```
+
+
+### Step 6: Train entire training set, compare prediction error and running time
 
 * Train models with the entire training set for each feature using the selected model (model parameter) via cross-validation. Feed the final training model with the completely holdout testing data. 
 ```{r}
