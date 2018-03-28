@@ -18,7 +18,7 @@ Term: Spring 2018
 
 **Contribution statement**: 
 + Xinlei Cao: Established and optimized the Convolution Neural Network(CNN) in Python. Completed the data augmentation such as flip and rotation, thus improved the generalization ability of the model. Finished the connection of Rmarkdown and Python. 
-+ Wenyuan Gu: Established and tuned logistic regression and random forest, and svm model using SIFT, LBP, HOG features, respectively. Created presentation slides and presented in front of class. 
++ Wenyuan Gu: Established and tuned Logistic Regression, Random Forest, and SVM model using SIFT, LBP, HOG features, respectively. Created presentation slides and presented in front of class. 
 + Wenshan Wang: Established and tuned GBM, XGBoost, and SVM model using SIFT, LBP, HOG features, respectively. Compared training time and accuracy of all models using LBP and HOG features. Wrote main.Rmd file. 
 + Yiyi Zhang: Provided direction on how to proceed the project. Extracted features using SIFT, HOG, and LBP and completed the feature extraction and project summary part of the main.Rmd. Updated README.md. 
 
