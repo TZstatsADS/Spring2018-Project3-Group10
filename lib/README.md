@@ -10,5 +10,8 @@ The lib directory contains various files with function definitions and code.
 + **Classification Model**  
     + [`split_train_test.R`](split_train_test.R): split images into training and test sets.     
     + [`cross_validation.R`](cross_validation.R): perform cross validation.    
+    + [`cv_result.R`](cv_result.R): present the cross validation result.
     + [`train.R`](train.R): fit the models using the training set.   
     + [`test.R`](test.R): predict test set using the trained models.   
+    + [`model_compare.R`](model_compare.R): compare the accuracy and training time of models
+    
